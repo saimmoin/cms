@@ -504,7 +504,7 @@ int main()
     int choice;
     while (true)
     {
-        cout << "\nSimple Login System\n";
+        cout << "\nCMS Login System\n";
         cout << "1. Register\n";
         cout << "2. Login\n";
         cout << "3. Exit\n";
