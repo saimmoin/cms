@@ -147,7 +147,7 @@ public:
         notify(message);
     }
 };
-UserManager *UserManager::instance = nullptr; // This means that the instance is not created yet
+UserManager *UserManager::instance = nullptr;
 
 // Abstract User class
 class User
@@ -160,7 +160,7 @@ public:
     virtual string getRole() const = 0;
     virtual void viewFiles(UserManager &userManager) = 0;
     virtual void viewFileContent(UserManager &userManager, const string &filename) = 0;
-    virtual void editFile(UserManager &userManager, const string &filename, const string &content) = 0;
+    virtual void editFile(UserManager &userManager, const string &filename, const string &content, bool append = false) = 0; // Added append parameter
     virtual void createFile(UserManager &userManager, const string &filename, const string &content) = 0;
     virtual void deleteFile(UserManager &userManager, const string &filename) = 0;
     virtual ~User() {}
@@ -210,7 +210,7 @@ public:
         file.close();
         userManager.logFileAction(username, "viewed content of", filename);
     }
-    void editFile(UserManager &userManager, const string &filename, const string &content) override
+    void editFile(UserManager &userManager, const string &filename, const string &content, bool append = false) override
     {
         ifstream checkFile(filename);
         if (!checkFile)
@@ -220,11 +220,11 @@ public:
             return;
         }
         checkFile.close();
-        ofstream file(filename);
+        ofstream file(filename, append ? ios::app : ios::out); // Append or overwrite based on parameter
         file << content;
         file.close();
-        userManager.logFileAction(username, "edited", filename);
-        cout << "File edited successfully!\n";
+        userManager.logFileAction(username, append ? "appended to" : "edited", filename);
+        cout << "File " << (append ? "appended" : "edited") << " successfully!\n";
     }
     void createFile(UserManager &userManager, const string &filename, const string &content) override
     {
@@ -291,9 +291,9 @@ public:
     {
         AdminUser(username, password).viewFileContent(userManager, filename);
     }
-    void editFile(UserManager &userManager, const string &filename, const string &content) override
+    void editFile(UserManager &userManager, const string &filename, const string &content, bool append = false) override
     {
-        AdminUser(username, password).editFile(userManager, filename, content);
+        AdminUser(username, password).editFile(userManager, filename, content, append); // Pass append parameter
     }
     void createFile(UserManager &userManager, const string &filename, const string &content) override
     {
@@ -318,7 +318,7 @@ public:
     {
         AdminUser(username, password).viewFileContent(userManager, filename);
     }
-    void editFile(UserManager &userManager, const string &filename, const string &content) override
+    void editFile(UserManager &userManager, const string &filename, const string &content, bool append = false) override
     {
         cout << "Permission denied: Viewers cannot edit files!\n";
     }
@@ -405,6 +405,10 @@ void userMenu(UserManager &userManager, User *user)
             {
                 cout << "Enter filename to edit: ";
                 cin >> filename;
+                cout << "Do you want to append or overwrite? (1 for append, 2 for overwrite): ";
+                int editMode;
+                cin >> editMode;
+                bool append = (editMode == 1);
                 cout << "Enter new content (type 'END' on a new line to finish):\n";
                 cin.ignore();
                 content = "";
@@ -412,7 +416,7 @@ void userMenu(UserManager &userManager, User *user)
                 {
                     content += line + "\n";
                 }
-                user->editFile(userManager, filename, content);
+                user->editFile(userManager, filename, content, append);
             }
             else if (choice == 5)
             {
@@ -445,6 +449,10 @@ void userMenu(UserManager &userManager, User *user)
             {
                 cout << "Enter filename to edit: ";
                 cin >> filename;
+                cout << "Do you want to append or overwrite? (1 for append, 2 for overwrite): ";
+                int editMode;
+                cin >> editMode;
+                bool append = (editMode == 1);
                 cout << "Enter new content (type 'END' on a new line to finish):\n";
                 cin.ignore();
                 content = "";
@@ -452,7 +460,7 @@ void userMenu(UserManager &userManager, User *user)
                 {
                     content += line + "\n";
                 }
-                user->editFile(userManager, filename, content);
+                user->editFile(userManager, filename, content, append);
             }
             else if (choice == 4)
             {
